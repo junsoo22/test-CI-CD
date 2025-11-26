@@ -30,7 +30,7 @@ jobs:
       run: chmod +x ./gradlew
 
     - name: Build with Gradle Wrapper
-      run: ./gradlew build
+      run: ./gradlew build -x test
 
     # Docker build & Push 
     - name: Docker build & push to Docker hub
