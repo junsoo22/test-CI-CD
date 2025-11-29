@@ -38,9 +38,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: |
-            docker-compose.yml
-            Dockerfile
+          source: "docker-compose.yml,Dockerfile"
           target: "~/myproject"
 
       - name: Create .env on EC2
