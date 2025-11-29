@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class TestController {
 
-    private static final String version="v1.0.3";
+    private static final String version="v1.0.4";
 
     @GetMapping("/test")
     public String home() {
