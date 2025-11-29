@@ -1,7 +1,7 @@
 services:
   app:
     container_name: myproject
-    image: myproject-test
+    image: myproject:latest
     restart: always
     ports:
       - "8080:8080"
