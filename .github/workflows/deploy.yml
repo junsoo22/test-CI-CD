@@ -24,42 +24,23 @@ jobs:
       - name: Build Spring Boot app
         run: ./gradlew clean build -x test
 
-      - name: Copy Jar to EC2
-        uses: appleboy/scp-action@v0.1.5
-        with:
-          host: 54.116.13.185
-          username: ubuntu
-          key: ${{ secrets.EC2_PRIVATE_KEY }} # pem 키
-          source: "build/libs/*.jar"
-          target: "~/spring-app"
+      - name: Login in to Docker Hub
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
-      - name: Run Spring boot app on EC2
+      - name: Build & Push Docker Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/myproject:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/myproject:latest
+
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.6
         with:
-          host: 54.116.13.185
+          host: ${{ secrets.EC2_HOST }}    #54.116.13.185
           username: ubuntu
-          key: ${{ secrets.EC2_PRIVATE_KEY }} # pem 키
-          script:
-            pkill -f 'java -jar' || true
-
-#      # Docker build & Push
-#      - name: Docker build & push to Docker hub
-#        run: |
-#          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-#          docker build -t ${{ secrets.DOCKER_USERNAME }}/docker-test .
-#          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test
-#
-#      # EC2 배포
-#      - name: Docker image pull & Deploy to EC2
-#        uses: appleboy/ssh-action@master
-#        with:
-#          host: ${{ secrets.EC2_HOST }} # EC2 인스턴스 퍼블릭 DNS
-#          username: ubuntu
-#          key: ${{ secrets.EC2_PRIVATE_KEY }} # pem 키
-#          # 도커 작업
-#          script: |
-#            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-test:latest
-#            sudo docker stop $(sudo docker ps -a -q)
-#            sudo docker run -d --log-driver=syslog -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/docker-test:latest
-#            sudo docker rm $(sudo docker ps --filter 'status=exited' -a -q)
-#            sudo docker image prune -a -f
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            cd ~/myproject
+            docker pull ${{ secrets.DOCKER_USERNAME }}/myproject:latest
+            docker compose down
+            doceker compose up -d --force-recreate
+            docker image prune -f
