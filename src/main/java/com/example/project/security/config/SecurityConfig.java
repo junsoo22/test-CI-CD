@@ -42,6 +42,7 @@ public class SecurityConfig {
 
         //csrf disable: jwt는 세션을 stateless로 관리하기 때문
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf((auth)->auth.disable())
                 .httpBasic((auth)->auth.disable())
                 .formLogin((auth)->auth.disable())
@@ -58,7 +59,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration configuration=new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "http://54.116.13.185:8080",   // ← 배포 주소 추가!
+                "http://54.116.13.185:3000"    // ← 프론트 배포 주소 (필요시)
+                 ));
         configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
