@@ -32,6 +32,26 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/myproject:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/myproject:latest
 
+      - name: Copy Docker Compose & Dockerfile to EC2
+        uses: appleboy/scp-action@v0.1.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: |
+            docker-compose.yml
+            Dockerfile
+          target: "~/myproject"
+
+      - name: Create .env on EC2
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            echo "${{ secrets.ENV_FILE }}" > ~/myproject/.env
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -40,7 +60,7 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
             cd ~/myproject
-            docker pull ${{ secrets.DOCKER_USERNAME }}/myproject:latest
-            docker compose down
-            doceker compose up -d --force-recreate
+            docker compose down || true
+            docker compose pull
+            docker compose up -d --force-recreate
             docker image prune -f
