@@ -1,7 +1,7 @@
 services:
   app:
     container_name: myproject
-    image: ${DOCKER_USERNAME}/myproject-test
+    image: junsoo22/myproject-test
     restart: always
     ports:
       - "8080:8080"
