@@ -29,8 +29,8 @@ jobs:
 
       - name: Build & Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/myproject:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/myproject:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/myproject-test
+          docker push ${{ secrets.DOCKER_USERNAME }}/myproject-test
 
       - name: Copy Docker Compose & Dockerfile to EC2
         uses: appleboy/scp-action@v0.1.5
