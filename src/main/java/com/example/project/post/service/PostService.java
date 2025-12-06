@@ -9,6 +9,7 @@ import com.example.project.post.exception.PostException;
 import com.example.project.post.repository.PostRepository;
 import com.example.project.user.entity.UserEntity;
 import com.example.project.user.repository.UserRepository;
+import com.example.project.websocket.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostConverter postConverter;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;  // ✅ 추가
 
     //게시글 작성
     @Transactional
@@ -34,6 +36,13 @@ public class PostService {
         UserEntity user=userRepository.findById(userId).orElseThrow();
         Post post=postConverter.toPost(dto,user);
         Post saved=postRepository.save(post);
+
+        // ✅ 게시글 작성 알림 전송 (전체 사용자에게)
+        notificationService.sendToAll(
+                "새 게시글: " + saved.getTitle(),
+                saved.getId(),
+                user.getNickName()
+        );
 
         return PostConverter.toPostResponse(saved);
 

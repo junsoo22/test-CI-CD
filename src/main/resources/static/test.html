@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>알림 테스트</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .status { padding: 10px; border-radius: 5px; margin-bottom: 20px; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .connect-btn { background: #28a745; color: white; border: none; border-radius: 5px; }
+        .disconnect-btn { background: #dc3545; color: white; border: none; border-radius: 5px; }
+        #notifications {
+            border: 1px solid #ddd;
+            padding: 15px;
+            min-height: 300px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .notification-item {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .time { color: #888; font-size: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔔 PromMate 알림 테스트</h1>
+
+    <div id="status" class="status disconnected">연결 안됨</div>
+
+    <div>
+        <button class="connect-btn" onclick="connect()">WebSocket 연결</button>
+        <button class="disconnect-btn" onclick="disconnect()">연결 해제</button>
+    </div>
+
+    <hr>
+
+    <h3>수신된 알림</h3>
+    <div id="notifications">
+        <p style="color: #888;">연결 후 게시글을 작성하면 여기에 알림이 표시됩니다.</p>
+    </div>
+</div>
+
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        // 디버그 로그 끄기 (원하면 삭제)
+        stompClient.debug = null;
+
+        stompClient.connect({}, function(frame) {
+            updateStatus(true);
+
+            // 전체 알림 구독 (게시글 작성 알림)
+            stompClient.subscribe('/topic/notification', function(message) {
+                const notification = JSON.parse(message.body);
+                showNotification(notification);
+            });
+
+            console.log('WebSocket 연결 성공');
+        }, function(error) {
+            updateStatus(false);
+            console.error('연결 실패:', error);
+        });
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        updateStatus(false);
+    }
+
+    function updateStatus(connected) {
+        const statusDiv = document.getElementById('status');
+        if (connected) {
+            statusDiv.textContent = '✅ 연결됨';
+            statusDiv.className = 'status connected';
+        } else {
+            statusDiv.textContent = '❌ 연결 안됨';
+            statusDiv.className = 'status disconnected';
+        }
+    }
+
+    function showNotification(notification) {
+        const container = document.getElementById('notifications');
+
+        // 처음 안내 메시지 제거
+        if (container.querySelector('p')) {
+            container.innerHTML = '';
+        }
+
+        const item = document.createElement('div');
+        item.className = 'notification-item';
+        item.innerHTML = `
+            <strong>📝 ${notification.message}</strong><br>
+            <span>작성자: ${notification.author || '알 수 없음'}</span><br>
+            <span class="time">${new Date().toLocaleTimeString()}</span>
+        `;
+
+        container.insertBefore(item, container.firstChild);
+    }
+</script>
+</body>
+</html>
