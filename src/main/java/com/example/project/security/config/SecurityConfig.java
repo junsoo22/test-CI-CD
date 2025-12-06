@@ -31,7 +31,13 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/v1/**",
             "/auth/**",
-            "/test"
+            "/test",
+
+            // ✅ 추가
+            "/test.html",
+            "/ws/**",           // WebSocket 엔드포인트
+            "/*.html",          // 모든 html 파일
+            "/static/**"        // 정적 리소스
     };
 
     @Bean
